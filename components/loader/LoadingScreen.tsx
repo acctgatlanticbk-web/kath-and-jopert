@@ -27,7 +27,7 @@ const PALETTE = {
   moss: '#909E79',
 } as const;
 const PALETTE_COLORS = Object.values(PALETTE);
-const TOTAL_DURATION_MS = 5000;
+const TOTAL_DURATION_MS = 15000;
 
 const DECORATION_IMAGES = [
   '/decoration/decoration/left-top-decoration.png',

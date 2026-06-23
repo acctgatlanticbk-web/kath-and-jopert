@@ -50,28 +50,36 @@ function buildTimelineEvents(siteConfig: SiteConfig): TimelineEvent[] {
   const receptionVenue = siteConfig.reception.location
 
   return [
+
+{
+    time: `3:00 PM`,
+    title: "Assembly",
+    location: `${siteConfig.ceremony.location}`,
+    icon: GuestsIcon,
+    imageSrc: "/weddingtimeline/assemble.png",
+  },  
+
   {
-    time: `1:30 PM`,
-    title: "Guest Arrival",
-    description: "Guests are kindly requested to arrive and be seated.Our wedding ceremony will begin promptly at 2:00 PM. To preserve the solemnity of the occasion, we ask that everyone be seated at 1:30pm before the ceremony begins.",
+    time: `3:30 PM`,
+    title: "Processional",
     location: `${siteConfig.ceremony.location}`,
     icon: GuestsIcon,
     imageSrc: "/weddingtimeline/arrivalimage.png",
   },  
   {
-    time: `2:00 PM`,
-    title: "Wedding Ceremony",
+    time: `4:00 PM`,
+    title: "Mass Ceremony",
     location: `${siteConfig.ceremony.location}`,
     icon: RingsIcon,
     imageSrc: "/weddingtimeline/WeddingCeremony.png",
   },
-  {
-    time: `4:00 PM`,
-    title: "Post-Nuptial Pictorial",
-    location: `${siteConfig.ceremony.location}`,
-    icon: RingsIcon,
-    imageSrc: "/weddingtimeline/PhotoSession.png",
-  },
+  // {
+  //   time: `4:00 PM`,
+  //   title: "Post-Nuptial Pictorial",
+  //   location: `${siteConfig.ceremony.location}`,
+  //   icon: RingsIcon,
+  //   imageSrc: "/weddingtimeline/PhotoSession.png",
+  // },
   {
     time: `5:30 PM`,
     title: "Cocktail Hour",
@@ -80,21 +88,21 @@ function buildTimelineEvents(siteConfig: SiteConfig): TimelineEvent[] {
     imageSrc: "/weddingtimeline/CockTailHour.png",
   },
   {
-    time: "5:15 PM",
-    title: "Reception Program",
+    time: "5:30 PM",
+    title: "Dances",
     location: receptionVenue,
     icon: FireworksIcon,
-    imageSrc: "/weddingtimeline/reception welcom.png",
+    imageSrc: "/weddingtimeline/dance.png",
   },
   {
-    time: "7:30 PM",
+    time: "8:00 PM",
     title: "Dinner",
     location: receptionVenue,
     icon: DinnerIcon,
     imageSrc: "/weddingtimeline/DinnerService.png",
   },
   {
-    time: "9:00 PM",
+    time: "10:00 PM",
     title: "Party",
     location: receptionVenue,
     icon: DanceIcon,

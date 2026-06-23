@@ -6,9 +6,9 @@ import {
 export const siteConfig = {
   couple: {
     bride: "Mia Lyn Reyes ", //Noenyl Bryle M. Gonzaga
-    brideNickname: "Mia Lyn", //Ltryl
+    brideNickname: "Mia", //Ltryl
     groom: "Jovelyn Lao", //Ltryl B. Benitez
-    groomNickname: "Jovelyn",
+    groomNickname: "Jov",
     monogram:"/monogram/monog.png" ,//Ltryl
     backgroundMusic:"/background_music/Dalangin by Earl Agustin (Lyrics).mp3"
   },
@@ -81,7 +81,7 @@ export const siteConfig = {
     map: "https://maps.app.goo.gl/7yPpZCRixiNVjauBA",
     date: "October 4, 2026",
     day: "Sunday",
-    time: "5:30 PM",
+    time: "6:00 PM",
     image: ["/Details/ceremony1.png", "/Details/ceremony2.png"],
   },
   dressCode: {
@@ -134,7 +134,7 @@ Now, as they prepare to say yes before God and the people they love most, Cather
   playlist: {
     title: "A Playlist from our hearts",
     subtitle: "Songs that have been part of our journey together",
-    playlistName: "Mia Lyn & Jovelyn Wedding",
+    playlistName: "Mia & Jov Wedding",
     embedUrl:
       "https://open.spotify.com/embed/playlist/2DlYKMjLkwDT4HbXtzRMl0?utm_source=generator",
     spotifyUrl: "https://open.spotify.com/playlist/2DlYKMjLkwDT4HbXtzRMl0",
@@ -143,7 +143,7 @@ Now, as they prepare to say yes before God and the people they love most, Cather
     googleDriveLink:
       "https://weduploader.com/upload/x2kqPwdYOMbQ5Dto?utm_source=site&utm_medium=qrcode&utm_campaign=dashboard&utm_content=x2kqPwdYOMbQ5Dto",
     albumQR: "/QR/AlbumQR.png",
-    hashtag: ["#MiaLynAndJovelynWedding"],
+    hashtag: ["#MiaAndJovWedding"],
     instructions: "Please scan this QR Code and upload the photos and videos you have taken during our wedding reception. We are delighted to see your snaps too!",
   },
 }

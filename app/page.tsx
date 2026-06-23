@@ -104,8 +104,7 @@ export default function Home() {
               <WeddingTimeline />
               {/* <PrincipalSponsors /> */}
               <FAQ />
-
-              <Registry />
+              {/* <Registry /> */}
               <SnapShare />
 
               <Footer />

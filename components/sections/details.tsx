@@ -1,7 +1,7 @@
 "use client"
 
 import { Section } from "@/components/section"
-import { useState, useEffect } from "react"
+import { useState, useEffect, type ReactNode } from "react"
 import { QRCodeSVG } from "qrcode.react"
 import { useSiteConfig } from "@/hooks/use-site-config"
 import Image from "next/image"
@@ -64,6 +64,122 @@ const ct = {
   reminderHead: "text-base sm:text-lg md:text-xl",
   reminderBody: "text-xs sm:text-sm md:text-base lg:text-lg",
 } as const
+
+const attireGuide = {
+  principalSponsors: {
+    image: "/attireGuide/principal-sponsors.png",
+    ladies: ["#EDD7B3", "#DCA449", "#EDCCA3"],
+    gentlemen: ["#F4D6A6", "#ECC99A", "#F9EBD7"],
+  },
+  secondarySponsors: {
+    image: "/attireGuide/secondary-sponsors.png",
+    ladies: ["#F8AFAE", "#FCA77F", "#FC776A"],
+    gentlemen: ["#E0AC7D", "#D6C4B5", "#EFD0AB"],
+  },
+  groomsmen: {
+    image: "/attireGuide/groomsmen.png",
+    colors: ["#BDBF86", "#979430", "#909E79"],
+  },
+  bridesmaids: {
+    image: "/attireGuide/bridesmaids.png",
+    colors: ["#FBAFB5", "#F95483", "#FB6A67", "#FC7406", "#FCB484", "#FDD461", "#D0B2D2"],
+  },
+  flowerGirlsRingBearers: {
+    image: "/attireGuide/flower-girl-and-ring-bearer.png",
+    flowerGirls: ["#F8ECDA", "#F4DCBB"],
+    ringBearers: ["#F4DBB4", "#EFC796"],
+  },
+} as const
+
+function ColorPalette({ colors }: { colors: readonly string[] }) {
+  const widthClass = colors.length > 4 ? "max-w-md" : "max-w-xs sm:max-w-sm"
+
+  return (
+    <div
+      className={`mx-auto flex h-8 w-full overflow-hidden rounded-full border-2 border-white sm:h-9 ${widthClass}`}
+      role="img"
+      aria-label={`Color palette: ${colors.join(", ")}`}
+    >
+      {colors.map((color) => (
+        <div
+          key={color}
+          className="min-w-0 flex-1"
+          style={{ backgroundColor: color }}
+          title={color}
+        />
+      ))}
+    </div>
+  )
+}
+
+function AttirePaletteGroup({
+  label,
+  colors,
+}: {
+  label: string
+  colors: readonly string[]
+}) {
+  return (
+    <div className="space-y-2 sm:space-y-2.5">
+      <p
+        className={`${cinzel.className} text-center ${ct.labelSm} uppercase tracking-[0.16em] font-semibold`}
+        style={{ color: detailText.label }}
+      >
+        {label}
+      </p>
+      <ColorPalette colors={colors} />
+    </div>
+  )
+}
+
+function AttirePaletteSection({ colors }: { colors: readonly string[] }) {
+  return <ColorPalette colors={colors} />
+}
+
+function AttireCard({
+  title,
+  image,
+  alt,
+  children,
+}: {
+  title: string
+  image: string
+  alt: string
+  children: ReactNode
+}) {
+  return (
+    <div className="relative group">
+      <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-motif-silver/25 via-motif-accent/5 to-transparent opacity-0 blur-lg transition-opacity duration-500 group-hover:opacity-100" />
+      <div className="relative overflow-hidden rounded-xl border border-motif-deep/20 bg-motif-cream shadow-[0_16px_40px_rgba(0,0,0,0.14)] transition-all duration-300 hover:border-motif-deep/50 hover:shadow-[0_20px_48px_rgba(0,0,0,0.2)] sm:rounded-2xl">
+
+        <div className="relative w-full aspect-[2176/1741] bg-[#FFF7F6]">
+          <Image
+            src={image}
+            alt={alt}
+            fill
+            className="object-cover object-center transition-transform duration-700 group-hover:scale-[1.02]"
+            sizes="(max-width: 1024px) 100vw, 1024px"
+          />
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2a2520]/72 via-[#2a2520]/35 to-transparent px-5 pb-5 pt-16 sm:px-8 sm:pb-6 sm:pt-20">
+            <div className="mx-auto flex max-w-lg flex-col items-center gap-2">
+              <div className="h-px w-12 bg-white/40 sm:w-16" />
+              <h4
+                className={`${cinzel.className} ${ct.attireCardTitle} text-center uppercase tracking-[0.22em] font-semibold leading-tight text-white drop-shadow-sm`}
+              >
+                {title}
+              </h4>
+              <div className="h-px w-12 bg-white/40 sm:w-16" />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-motif-deep/10 bg-motif-cream px-4 py-4 sm:px-6 sm:py-5 md:px-8">
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // Colors sourced from globals.css @theme inline — edit there to update everywhere
 
@@ -222,7 +338,7 @@ export function Details() {
       {/* Venue and Event Information */}
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 mb-8 sm:mb-12 md:mb-16 space-y-6 sm:space-y-10 md:space-y-14 details-container-inner">
         
-        {/* Ceremony Card */}
+        {/* Ceremony & Reception Card — same venue */}
         <div className="relative group">
           {/* Subtle champagne glow on hover */}
           <div className="absolute -inset-1 bg-gradient-to-br from-motif-silver/22 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-lg" />
@@ -250,12 +366,15 @@ export function Details() {
               ))}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               
-              {/* Venue name overlay with warm gold accent */}
+              {/* Venue name overlay */}
               <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 md:bottom-6 md:left-6 right-3 sm:right-4 md:right-6">
+                <span className={`${cinzel.className} inline-block mb-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-[10px] sm:text-xs uppercase tracking-[0.2em] text-white border border-white/30`}>
+                  Ceremony & Reception
+                </span>
                 <h3 className={`${cinzel.className} ${ct.overlayTitle} font-[family-name:var(--font-crimson)] font-normal text-white mb-0.5 sm:mb-1 drop-shadow-lg uppercase tracking-[0.1em] leading-tight`}>
                   {siteConfig.ceremony.location}
                 </h3>
-                <p className={`${cinzel.className} ${ct.overlaySub} text-white drop-shadow-md tracking-wide`}>
+                <p className={`${cinzel.className} ${ct.overlaySub} text-white/90 drop-shadow-md tracking-wide`}>
                   {siteConfig.ceremony.venue}
                 </p>
               </div>
@@ -295,10 +414,32 @@ export function Details() {
                   <div className="h-[1px] w-8 sm:w-10 md:w-14 bg-gradient-to-l from-transparent via-motif-medium to-motif-medium" />
                 </div>
 
-                {/* Time */}
-                <p className={`${cinzel.className} ${ct.time} font-semibold tracking-wide`} style={{ color: detailText.heading }}>
-                  {siteConfig.ceremony.time}
-                </p>
+                {/* Schedule — ceremony & reception, same venue */}
+                <div className="mx-auto max-w-sm">
+                  <div className="overflow-hidden rounded-xl border border-motif-deep/15 bg-motif-cream/40 shadow-sm">
+                    <div className="grid grid-cols-2 divide-x divide-motif-deep/10">
+                      <div className="px-3 py-3 sm:px-4 sm:py-4 text-center">
+                        <p className={`${cinzel.className} ${ct.labelSm} font-semibold uppercase tracking-[0.16em] mb-1.5 sm:mb-2`} style={{ color: detailText.label }}>
+                          Ceremony
+                        </p>
+                        <p className={`${cinzel.className} ${ct.time} font-semibold tracking-wide`} style={{ color: detailText.heading }}>
+                          {siteConfig.ceremony.time}
+                        </p>
+                      </div>
+                      <div className="px-3 py-3 sm:px-4 sm:py-4 text-center">
+                        <p className={`${cinzel.className} ${ct.labelSm} font-semibold uppercase tracking-[0.16em] mb-1.5 sm:mb-2`} style={{ color: detailText.label }}>
+                          Reception
+                        </p>
+                        <p className={`${cinzel.className} ${ct.time} font-semibold tracking-wide`} style={{ color: detailText.heading }}>
+                          {siteConfig.reception.time}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* <p className={`${cormorant.className} mt-3 sm:mt-4 ${ct.body} italic leading-relaxed`} style={{ ...bodyFont, color: detailText.label }}>
+                    Both held at the same venue
+                  </p> */}
+                </div>
               </div>
 
               {/* Location Details */}
@@ -307,7 +448,7 @@ export function Details() {
                   <MapPin className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 mt-0.5 flex-shrink-0" style={{ color: detailText.accent }} />
                   <div className="flex-1 min-w-0">
                     <p className={`${ct.label} font-[family-name:var(--font-crimson)] font-semibold mb-1.5 sm:mb-2 uppercase tracking-wide`} style={{ color: detailText.label }}>
-                      Location
+                      Ceremony & Reception Venue
                     </p>
                     <p className={`${cinzel.className} ${ct.bodyMd} font-[family-name:var(--font-crimson)] leading-relaxed`} style={{ color: detailText.body }}>
                       {ceremonyVenueName}
@@ -345,7 +486,7 @@ export function Details() {
                 <button
                   onClick={() => openInMaps(ceremonyMapsLink)}
                   className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2.5 sm:py-3 md:py-3.5 bg-motif-deep hover:bg-motif-accent text-motif-cream rounded-lg font-[family-name:var(--font-crimson)] font-semibold ${ct.btn} transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] premium-shadow`}
-                  aria-label="Get directions to ceremony venue"
+                  aria-label="Get directions to ceremony and reception venue"
                 >
                   <Navigation className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 flex-shrink-0" />
                   <span>Get Directions</span>
@@ -354,7 +495,7 @@ export function Details() {
                   onClick={() => copyToClipboard(ceremonyVenue, 'ceremony')}
                   className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2.5 sm:py-3 md:py-3.5 bg-motif-cream border-2 border-motif-deep/30 hover:border-motif-deep/50 hover:bg-motif-silver/20 rounded-lg font-[family-name:var(--font-crimson)] font-semibold ${ct.btn} transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]`}
                   style={{ color: detailText.heading }}
-                  aria-label="Copy ceremony venue address"
+                  aria-label="Copy ceremony and reception venue address"
                 >
                   {copiedItems.has('ceremony') ? (
                     <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 flex-shrink-0 text-motif-deep" />
@@ -368,128 +509,6 @@ export function Details() {
           </div>
         </div>
 
-        {/* Reception Card */}
-        <div className="relative group">
-          <div className="absolute -inset-1 bg-gradient-to-br from-motif-silver/22 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-lg" />
-
-          <div className="relative elegant-card bg-motif-cream rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_16px_40px_rgba(0,0,0,0.18)] border border-motif-deep/25 premium-shadow hover:border-motif-deep/45 transition-all duration-300">
-       
-            <div className="relative w-full h-64 sm:h-72 md:h-80 lg:h-96 xl:h-[30rem] overflow-hidden">
-              {receptionImages.map((src, index) => (
-                <div
-                  key={src}
-                  className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                    index === currentReceptionImageIndex ? "opacity-100" : "opacity-0"
-                  }`}
-                >
-                  <Image
-                    src={src}
-                    alt={siteConfig.reception.venue}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1280px"
-                    priority={index === 0}
-                  />
-                </div>
-              ))}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10" />
-              
-          
-              <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 md:bottom-6 md:left-6 right-3 sm:right-4 md:right-6 z-20">
-                <h3 className={`${cinzel.className} ${ct.overlayTitle} font-[family-name:var(--font-crimson)] font-normal text-white mb-0.5 sm:mb-1 drop-shadow-lg uppercase tracking-[0.1em] leading-tight`}>
-                  {siteConfig.reception.location}
-                </h3>
-                <p className={`${cinzel.className} ${ct.overlaySub} text-white drop-shadow-md tracking-wide`}>
-                  {siteConfig.reception.venue}
-                </p>
-              </div>
-            </div>
-
-            <div className="p-3 sm:p-5 md:p-7 lg:p-9">
-         
-              <div className="text-center mb-5 sm:mb-8">
-                {siteConfig.reception.time === "To follow after the ceremony" ? (
-                  <p className={`${cinzel.className} ${ct.subhead} lg:text-xl font-[family-name:var(--font-crimson)] font-semibold tracking-wide`} style={{ color: detailText.heading }}>
-                    To follow after the ceremony
-                  </p>
-                ) : (
-                  <>
-                    <p className={`${cinzel.className} ${ct.label} font-[family-name:var(--font-crimson)] font-semibold uppercase tracking-[0.18em] mb-2 sm:mb-3`} style={{ color: detailText.label }}>
-                      {siteConfig.reception.time === "After ceremony" ? "Starts" : "Starts at"}
-                    </p>
-                    <p className={`${cinzel.className} ${ct.body} font-[family-name:var(--font-crimson)] font-semibold tracking-wide`} style={{ color: detailText.heading }}>
-                      {siteConfig.reception.time}
-                    </p>
-                  </>
-                )}
-              </div>
-
-        
-              <div className="bg-gradient-to-br from-motif-cream/40 to-motif-cream rounded-xl p-3 sm:p-4 md:p-5 mb-4 sm:mb-6 border border-motif-deep/15">
-                <div className="flex items-start gap-2 sm:gap-3 md:gap-4">
-                  <MapPin className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 mt-0.5 flex-shrink-0" style={{ color: detailText.accent }} />
-                  <div className="flex-1 min-w-0">
-                    <p className={`${ct.label} font-[family-name:var(--font-crimson)] font-semibold mb-1.5 sm:mb-2 uppercase tracking-wide`} style={{ color: detailText.label }}>
-                      Location
-                    </p>
-                    <p className={`${cinzel.className} ${ct.bodyMd} font-[family-name:var(--font-crimson)] leading-relaxed`} style={{ color: detailText.body }}>
-                      {receptionVenueName}
-                    </p>
-                    {receptionVenueDetail && (
-                    <p className={`${cinzel.className} ${ct.body} font-[family-name:var(--font-crimson)] leading-relaxed mt-1`} style={{ color: detailText.body }}>
-                        {receptionVenueDetail}
-                      </p>
-                    )}
-                    <p className={`${cinzel.className} ${ct.body} font-[family-name:var(--font-crimson)] leading-relaxed`} style={{ color: detailText.body }}>
-                      {receptionAddress}
-                    </p>
-                  </div>
-              
-                  <div className="flex flex-col items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                  <div className="bg-motif-cream p-1.5 sm:p-2 md:p-2.5 rounded-lg border border-motif-deep/20 shadow-sm">
-                      <QRCodeSVG
-                        value={receptionMapsLink}
-                        size={80}
-                        level="M"
-                        includeMargin={false}
-                        fgColor="var(--color-motif-deep)"
-                        bgColor="var(--color-motif-cream)"
-                      />
-                    </div>
-                    <p className={`${ct.label} font-[family-name:var(--font-crimson)] italic text-center max-w-[90px]`} style={{ color: detailText.label }}>
-                      Scan for directions
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-     
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4">
-                <button
-                  onClick={() => openInMaps(receptionMapsLink)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2.5 sm:py-3 md:py-3.5 bg-motif-deep hover:bg-motif-accent text-motif-cream rounded-lg font-[family-name:var(--font-crimson)] font-semibold ${ct.btn} transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] premium-shadow`}
-                  aria-label="Get directions to reception venue"
-                >
-                  <Navigation className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 flex-shrink-0" />
-                  <span>Get Directions</span>
-                </button>
-                <button
-                  onClick={() => copyToClipboard(receptionVenue, 'reception')}
-                  className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2.5 sm:py-3 md:py-3.5 bg-motif-cream border-2 border-motif-deep/30 hover:border-motif-deep/50 hover:bg-motif-silver/20 rounded-lg font-[family-name:var(--font-crimson)] font-semibold ${ct.btn} transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]`}
-                  style={{ color: detailText.heading }}
-                  aria-label="Copy reception venue address"
-                >
-                  {copiedItems.has('reception') ? (
-                    <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 flex-shrink-0 text-motif-deep" />
-                  ) : (
-                    <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 flex-shrink-0" />
-                  )}
-                  <span>{copiedItems.has('reception') ? 'Copied!' : 'Copy Address'}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Attire Guidelines */}
@@ -519,320 +538,57 @@ export function Details() {
           </p>
         </div>
 
-        {/* Three attire cards */}
+        {/* Attire cards */}
         <div className="space-y-6 sm:space-y-8 md:space-y-10 mb-6 sm:mb-8 md:mb-10">
 
-          {/* ── Principal Sponsors ── */}
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-br from-motif-silver/22 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-lg" />
-            <div className="relative bg-motif-cream rounded-xl sm:rounded-2xl overflow-hidden border border-motif-deep/20 shadow-[0_16px_40px_rgba(0,0,0,0.14)] hover:shadow-[0_20px_48px_rgba(0,0,0,0.22)] hover:border-motif-deep/70 transition-all duration-300">
-
-              {/* Title */}
-              <div className="px-4 sm:px-6 md:px-8 pt-5 sm:pt-7 pb-4 sm:pb-5 text-center">
-                <h4 className={`${cinzel.className} ${ct.attireCardTitle} uppercase tracking-[0.2em] font-semibold leading-tight`} style={{ color: detailText.accent }}>
-                  Principal Sponsors
-                </h4>
-              </div>
-
-              {/* Image */}
-              <div className="relative w-full aspect-[4/3] sm:aspect-[3/2] max-w-2xl mx-auto rounded-lg sm:rounded-xl overflow-hidden border border-motif-medium/30" style={{ width: 'calc(100% - 2rem)' }}>
-                <Image
-                  src="/Details/sponsors-new.png" 
-                  alt="Principal sponsor attire"
-                  fill
-                  className="object-contain bg-[#FFF7F6]/50 p-2 sm:p-3"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 672px"
-                />
-              </div>
-
-              {/* Palette — directly below image */}
-              <div className="px-4 sm:px-6 md:px-8 pt-5 sm:pt-6 pb-4 sm:pb-5">
-                <div className="flex justify-center gap-2 sm:gap-3 md:gap-4 flex-wrap">
-                  {dressCodeColors.map((color) => (
-                    <div
-                      key={color.trim()}
-                      className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full ring-1 ring-gray-300/60 hover:scale-110 transition-transform duration-300"
-                      style={{ backgroundColor: color.trim() }}
-                      title={color.trim()}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Notes — tagline + Gents / Ladies */}
-              <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6">
-                <div className="border-t border-motif-silver/60 pt-3 sm:pt-3.5">
-                  <div className="rounded-md sm:rounded-lg border border-motif-silver/50 bg-motif-cream/60 px-3 py-3 sm:px-4 sm:py-3.5">
-                    <p className={`${cormorant.className} text-left ${ct.bodyLg} italic leading-relaxed mb-4`} style={{ ...bodyFont, color: detailText.body }}>
-                      Your presence will make our day even more special.
-                    </p>
-
-                    <div className="space-y-5">
-                      <div>
-                        <p className={`${cinzel.className} text-left ${ct.bodyLg} uppercase tracking-[0.16em] font-semibold mb-3`} style={{ color: detailText.heading }}>
-                          Principal Sponsors
-                        </p>
-                        <div className="space-y-2.5">
-                          <div>
-                            <p className={`${cinzel.className} text-left ${ct.labelSm} uppercase tracking-[0.14em] font-semibold mb-1`} style={{ color: detailText.label }}>
-                              Ninang
-                            </p>
-                            <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                            Champagne / Soft Taupe Greige Gown
-                            </p>
-                          </div>
-                          <div>
-                            <p className={`${cinzel.className} text-left ${ct.labelSm} uppercase tracking-[0.14em] font-semibold mb-1`} style={{ color: detailText.label }}>
-                              Ninong
-                            </p>
-                            <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                            Dark Gray / Charcoal Gray
-                            </p>
-                          </div>
-                        </div>
-                      </div> <div>
-                        <p className={`${cinzel.className} text-left ${ct.bodyLg} uppercase tracking-[0.16em] font-semibold mb-3`} style={{ color: detailText.heading }}>
-                        Wedding Offertories
-                        </p>
-                        <div className="space-y-2.5">
-                          <div>
-                            <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                            Navy Blue / Dark Blue
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* <div className="h-px bg-motif-silver/45" aria-hidden /> */}
-{/* 
-                      <div>
-                        <p className={`${cinzel.className} text-left ${ct.bodyLg} uppercase tracking-[0.16em] font-semibold mb-3`} style={{ color: detailText.heading }}>
-                          Secondary Sponsors
-                        </p>
-                        <div className="space-y-2.5">
-                          <div>
-                            <p className={`${cinzel.className} text-left ${ct.labelSm} uppercase tracking-[0.14em] font-semibold mb-1`} style={{ color: detailText.label }}>
-                              Gentlemen
-                            </p>
-                            <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                              Dusty blue tuxedo with dusty blue necktie
-                            </p>
-                          </div>
-                          <div>
-                            <p className={`${cinzel.className} text-left ${ct.labelSm} uppercase tracking-[0.14em] font-semibold mb-1`} style={{ color: detailText.label }}>
-                              Ladies
-                            </p>
-                            <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                              Dusty blue gown
-                            </p>
-                          </div>
-                        </div>
-                      </div> */}
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <AttireCard
+            title="Principal Sponsors"
+            image={attireGuide.principalSponsors.image}
+            alt="Principal sponsor attire"
+          >
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
+              <AttirePaletteGroup label="Ladies" colors={attireGuide.principalSponsors.ladies} />
+              <AttirePaletteGroup label="Gentlemen" colors={attireGuide.principalSponsors.gentlemen} />
             </div>
-          </div>
+          </AttireCard>
 
-          {/* ── Principal Sponsors ── */}
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-br from-motif-silver/22 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-lg" />
-            <div className="relative bg-motif-cream rounded-xl sm:rounded-2xl overflow-hidden border border-motif-deep/20 shadow-[0_16px_40px_rgba(0,0,0,0.14)] hover:shadow-[0_20px_48px_rgba(0,0,0,0.22)] hover:border-motif-deep/70 transition-all duration-300">
-
-              {/* Title */}
-              <div className="px-4 sm:px-6 md:px-8 pt-5 sm:pt-7 pb-4 sm:pb-5 text-center">
-                <h4 className={`${cinzel.className} ${ct.attireCardTitle} uppercase tracking-[0.2em] font-semibold leading-tight`} style={{ color: detailText.accent }}>
-                  Secondary Sponsors
-                </h4>
-              </div>
-
-              {/* Image */}
-              <div className="relative w-full aspect-[4/3] sm:aspect-[3/2] max-w-2xl mx-auto rounded-lg sm:rounded-xl overflow-hidden border border-motif-medium/30" style={{ width: 'calc(100% - 2rem)' }}>
-                <Image
-                  src="/Details/entourage-new.png" 
-                  alt="Principal sponsor attire"
-                  fill
-                  className="object-contain bg-[#FFF7F6]/50 p-2 sm:p-3"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 672px"
-                />
-              </div>
-
-              {/* Palette — directly below image */}
-              <div className="px-4 sm:px-6 md:px-8 pt-5 sm:pt-6 pb-4 sm:pb-5">
-                <div className="flex justify-center gap-2 sm:gap-3 md:gap-4 flex-wrap">
-                  {dressCodeColors.map((color) => (
-                    <div
-                      key={color.trim()}
-                      className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full ring-1 ring-gray-300/60 hover:scale-110 transition-transform duration-300"
-                      style={{ backgroundColor: color.trim() }}
-                      title={color.trim()}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Notes — tagline + Gents / Ladies */}
-              <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6">
-                <div className="border-t border-motif-silver/60 pt-3 sm:pt-3.5">
-                  <div className="rounded-md sm:rounded-lg border border-motif-silver/50 bg-motif-cream/60 px-3 py-3 sm:px-4 sm:py-3.5">
-                    <p className={`${cormorant.className} text-left ${ct.bodyLg} italic leading-relaxed mb-4`} style={{ ...bodyFont, color: detailText.body }}>
-                      Your presence will make our day even more special.
-                    </p>
-
-                    <div className="space-y-5">
-                      <div>
-                        <p className={`${cinzel.className} text-left ${ct.bodyLg} uppercase tracking-[0.16em] font-semibold mb-3`} style={{ color: detailText.heading }}>
-                          Secondary Sponsors
-                        </p>
-                        <div className="space-y-2.5">
-                          <div>
-                            <p className={`${cinzel.className} text-left ${ct.labelSm} uppercase tracking-[0.14em] font-semibold mb-1`} style={{ color: detailText.label }}>
-                            Maid of Honor:
-                            </p>
-                            <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                            Dusty Rose / Blush Pink
-                            </p>
-                          </div>
-                          <div>
-                            <p className={`${cinzel.className} text-left ${ct.labelSm} uppercase tracking-[0.14em] font-semibold mb-1`} style={{ color: detailText.label }}>
-                            Best Man:
-                            </p>
-                            <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                            Beige with Pink Necktie
-                            </p>
-                          </div>
-                          <div>
-                            <p className={`${cinzel.className} text-left ${ct.labelSm} uppercase tracking-[0.14em] font-semibold mb-1`} style={{ color: detailText.label }}>
-                            Bridesmaid:
-                            </p>
-                            <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                            Burgundy
-                            </p>
-                          </div>
-                          <div>
-                            <p className={`${cinzel.className} text-left ${ct.labelSm} uppercase tracking-[0.14em] font-semibold mb-1`} style={{ color: detailText.label }}>
-                            Groomsmen:
-                            </p>
-                            <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                            Beige with Burgundy Necktie
-                            </p>
-                          </div>
-                          <div>
-                            <p className={`${cinzel.className} text-left ${ct.labelSm} uppercase tracking-[0.14em] font-semibold mb-1`} style={{ color: detailText.label }}>
-                            Sign Bearer for “Here Comes the Bride”:
-                            </p>
-                            <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                            Pink / Beige 
-                            </p>
-                          </div>
-                          <div>
-                            <p className={`${cinzel.className} text-left ${ct.labelSm} uppercase tracking-[0.14em] font-semibold mb-1`} style={{ color: detailText.label }}>
-                            Sign Bearer for “Here Comes the Groom”: 
-                            </p>
-                            <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                            Burgundy / Beige 
-                            </p>
-                          </div>
-                          <div>
-                            <p className={`${cinzel.className} text-left ${ct.labelSm} uppercase tracking-[0.14em] font-semibold mb-1`} style={{ color: detailText.label }}>
-                            Flower Girls:
-                            </p>
-                            <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                            White Dress with Burgundy Sash/Belt
-                            </p>
-                          </div>
-                          <div>
-                            <p className={`${cinzel.className} text-left ${ct.labelSm} uppercase tracking-[0.14em] font-semibold mb-1`} style={{ color: detailText.label }}>
-                            Ring / Bible / Coin Bearers:
-                            </p>
-                            <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                            Beige Suit
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="h-px bg-motif-silver/45" aria-hidden />
-
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <AttireCard
+            title="Secondary Sponsors"
+            image={attireGuide.secondarySponsors.image}
+            alt="Secondary sponsor attire"
+          >
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
+              <AttirePaletteGroup label="Ladies" colors={attireGuide.secondarySponsors.ladies} />
+              <AttirePaletteGroup label="Gentlemen" colors={attireGuide.secondarySponsors.gentlemen} />
             </div>
-          </div>
+          </AttireCard>
 
-          {/* ── Guest Attire ── */}
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-br from-motif-silver/22 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-lg" />
-            <div className="relative bg-motif-cream rounded-xl sm:rounded-2xl overflow-hidden border border-motif-deep/20 shadow-[0_16px_40px_rgba(0,0,0,0.14)] hover:shadow-[0_20px_48px_rgba(0,0,0,0.22)] hover:border-motif-deep/70 transition-all duration-300">
+          <AttireCard
+            title="Groomsmen"
+            image={attireGuide.groomsmen.image}
+            alt="Groomsmen attire"
+          >
+            <AttirePaletteSection colors={attireGuide.groomsmen.colors} />
+          </AttireCard>
 
-              {/* Title */}
-              <div className="px-4 sm:px-6 md:px-8 pt-5 sm:pt-7 pb-4 sm:pb-5 text-center">
-                <h4 className={`${cinzel.className} ${ct.attireCardTitle} uppercase tracking-[0.2em] font-semibold leading-tight`} style={{ color: detailText.accent }}>
-                  Guests
-                </h4>
-              </div>
+          <AttireCard
+            title="Bridesmaids"
+            image={attireGuide.bridesmaids.image}
+            alt="Bridesmaids attire"
+          >
+            <AttirePaletteSection colors={attireGuide.bridesmaids.colors} />
+          </AttireCard>
 
-              {/* Image */}
-              <div className="relative w-full aspect-[4/3] sm:aspect-[3/2] max-w-2xl mx-auto rounded-lg sm:rounded-xl overflow-hidden border border-motif-medium/30" style={{ width: 'calc(100% - 2rem)' }}>
-                <Image
-                  src={siteConfig.dressCode.guests.photo}
-                  alt="Guest attire"
-                  fill
-                  className="object-contain bg-[#FFF7F6]/50 p-2 sm:p-3"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 672px"
-                />
-              </div>
-
-              {/* Palette — directly below image */}
-              <div className="px-4 sm:px-6 md:px-8 pt-5 sm:pt-6 pb-4 sm:pb-5">
-                <div className="flex justify-center gap-2 sm:gap-3 md:gap-4 flex-wrap">
-                  {dressCodeColors.map((color) => (
-                    <div
-                      key={color.trim()}
-                      className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full ring-1 ring-gray-300/60 hover:scale-110 transition-transform duration-300"
-                      style={{ backgroundColor: color.trim() }}
-                      title={color.trim()}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Notes — tagline + Gents / Ladies */}
-              <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6">
-                <div className="border-t border-motif-silver/60 pt-3 sm:pt-3.5">
-                  <div className="rounded-md sm:rounded-lg bg-gradient-to-br from-motif-deep/[0.1] via-motif-cream/45 to-motif-deep/[0.06] border border-motif-deep/20 px-3 py-2.5 sm:px-3.5 sm:py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]">
-                    <p className={`${cinzel.className} text-left ${ct.labelSm} font-semibold uppercase tracking-[0.18em] mb-2`} style={{ color: detailText.accent }}>
-                      Note
-                    </p>
-                    <p className={`${cormorant.className} text-left ${ct.bodyLg} italic leading-relaxed mb-2`} style={{ ...bodyFont, color: detailText.body }}>
-                      We kindly ask our guests to wear the colors shown above.
-                    </p>
-                    
-                    <div className="space-y-2 border-l-2 border-motif-deep/45 pl-2.5 sm:pl-3">
-                      <div>
-                        <p className={`${cinzel.className} text-left ${ct.labelSm} uppercase tracking-[0.16em] font-semibold mb-1`} style={{ color: detailText.label }}>
-                        Ladies:
-                        </p>
-                        <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                        Sage Green / Dusty Blue / Soft Blue
-                        </p>
-                      </div>
-                      <div>
-                        <p className={`${cinzel.className} text-left ${ct.labelSm} uppercase tracking-[0.16em] font-semibold mb-1`} style={{ color: detailText.label }}>
-                        Gentlemen:
-                        </p>
-                        <p className={`${cormorant.className} text-left ${ct.bodyLg} leading-relaxed`} style={{ ...bodyFont, color: detailText.body }}>
-                        Navy Blue / Gray
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <AttireCard
+            title="Flower Girls / Ring Bearers"
+            image={attireGuide.flowerGirlsRingBearers.image}
+            alt="Flower girls and ring bearers attire"
+          >
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
+              <AttirePaletteGroup label="Flower Girls" colors={attireGuide.flowerGirlsRingBearers.flowerGirls} />
+              <AttirePaletteGroup label="Ring Bearers" colors={attireGuide.flowerGirlsRingBearers.ringBearers} />
             </div>
-          </div>
+          </AttireCard>
         </div>
 
         {/* Dress code restrictions */}
@@ -986,7 +742,7 @@ export function Details() {
                   <>
                     <Heart className="w-4 h-4" fill="var(--color-motif-cream)" style={{ color: "var(--color-motif-cream)" }} />
                     <span className="text-xs sm:text-sm font-bold text-motif-cream">
-                      Ceremony Venue
+                      Ceremony & Reception
                     </span>
                   </>
                 ) : (
@@ -1052,19 +808,35 @@ export function Details() {
 
                     {/* Date & Time info */}
                     {showImageModal === "ceremony" && (
-                      <div
-                        className="flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-lg border"
-                        style={{
-                          color: "var(--color-motif-cream)",
-                          backgroundColor: "var(--color-motif-deep)",
-                          opacity: 0.9,
-                          borderColor: "var(--color-motif-cream)",
-                        }}
-                      >
-                        <Clock className="w-4 h-4 text-motif-cream" />
-                        <span>
-                          {formattedCeremonyDate} at {siteConfig.ceremony.time}
-                        </span>
+                      <div className="space-y-2">
+                        <div
+                          className="flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-lg border"
+                          style={{
+                            color: "var(--color-motif-cream)",
+                            backgroundColor: "var(--color-motif-deep)",
+                            opacity: 0.9,
+                            borderColor: "var(--color-motif-cream)",
+                          }}
+                        >
+                          <Clock className="w-4 h-4 text-motif-cream shrink-0" />
+                          <span>
+                            Ceremony — {formattedCeremonyDate} at {siteConfig.ceremony.time}
+                          </span>
+                        </div>
+                        <div
+                          className="flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-lg border"
+                          style={{
+                            color: "var(--color-motif-cream)",
+                            backgroundColor: "var(--color-motif-deep)",
+                            opacity: 0.9,
+                            borderColor: "var(--color-motif-cream)",
+                          }}
+                        >
+                          <Utensils className="w-4 h-4 text-motif-cream shrink-0" />
+                          <span>
+                            Reception — {formattedReceptionDate} at {siteConfig.reception.time}
+                          </span>
+                        </div>
                       </div>
                     )}
                     {showImageModal === "reception" && (

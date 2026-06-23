@@ -1,11 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback, Suspense, useRef, useLayoutEffect } from "react"
-import dynamic from "next/dynamic"
+import { useState, useEffect, useCallback, useRef, useLayoutEffect, useMemo, type CSSProperties } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion, AnimatePresence } from "motion/react"
-import { Cormorant_Garamond, Cinzel } from "next/font/google"
 import {
   Heart,
   Check,
@@ -18,174 +16,317 @@ import { LoadingScreen } from "@/components/loader/LoadingScreen"
 import { getRoleSingular } from "@/lib/proposal-roles"
 import type { ProposalRole, ProposalResponse } from "@/lib/proposal-types"
 
-// Palette lives in globals.css → @theme inline → --color-motif-*
+const TEXT = "var(--color-motif-medium)"
+const TEXT_DEEP = "var(--color-motif-medium)"
+const ACCENT = "var(--color-motif-accent)"
 
-const Silk = dynamic(() => import("@/components/silk"), { ssr: false })
-const enableDecor = process.env.NEXT_PUBLIC_ENABLE_DECOR !== "false"
+const smg: CSSProperties = {
+  fontFamily: "'SortsMillGoudy', Georgia, serif",
+  fontStyle: "normal",
+}
+const hps: CSSProperties = {
+  fontFamily: "'HelloParisSans', serif",
+}
 
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-})
+const HERO_BACKGROUND = `linear-gradient(
+  165deg,
+  var(--color-motif-cream) 0%,
+  color-mix(in srgb, var(--color-motif-cream) 88%, white) 22%,
+  #FFFFFF 48%,
+  color-mix(in srgb, var(--color-motif-soft) 16%, transparent) 74%,
+  color-mix(in srgb, var(--color-motif-yellow) 12%, transparent) 100%
+)`
 
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  weight: ["400", "600"],
-})
-
-const playlistScriptStyle = {
-  fontFamily: "var(--font-playlist-script)",
-  fontWeight: 400,
-} as const
-
-const brittanyStyle = {
-  fontFamily: "var(--font-brittany), cursive",
-  color: "var(--color-motif-deep)",
-  letterSpacing: "0.01em",
-} as const
-
-const ROMANTIC_SPARKLES = [
-  { id: "a", top: "7%", left: "10%", size: 5, delay: 0, duration: 3.4 },
-  { id: "b", top: "14%", left: "82%", size: 4, delay: 0.6, duration: 2.9 },
-  { id: "c", top: "28%", left: "4%", size: 3, delay: 1.1, duration: 3.8 },
-  { id: "d", top: "22%", left: "93%", size: 6, delay: 0.3, duration: 4.2 },
-  { id: "e", top: "48%", left: "7%", size: 4, delay: 1.8, duration: 3.1 },
-  { id: "f", top: "55%", left: "90%", size: 3, delay: 0.9, duration: 3.6 },
-  { id: "g", top: "72%", left: "14%", size: 5, delay: 1.4, duration: 4 },
-  { id: "h", top: "78%", left: "78%", size: 4, delay: 0.2, duration: 3.3 },
+const PALETTE_COLORS = [
+  "var(--color-motif-cream)",
+  "var(--color-motif-silver)",
+  "var(--color-motif-soft)",
+  "var(--color-motif-accent)",
+  "var(--color-motif-yellow)",
+  "var(--color-motif-medium)",
 ] as const
 
-function RomanticSparkles() {
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      <span className="absolute -left-10 top-[18%] h-36 w-36 rounded-full bg-motif-accent/20 blur-3xl animate-pulse-slow" />
-      <span className="absolute -right-8 top-[42%] h-44 w-44 rounded-full bg-motif-soft/50 blur-3xl animate-float" />
-      <span className="absolute bottom-[12%] left-1/2 h-32 w-32 -translate-x-1/2 rounded-full bg-motif-accent/15 blur-3xl animate-float-delayed" />
+interface AmbientOrb {
+  id: number
+  x: number
+  y: number
+  size: number
+  color: string
+  opacity: number
+  duration: number
+  delay: number
+  driftX: number
+  driftY: number
+}
 
-      {ROMANTIC_SPARKLES.map((sparkle) => (
-        <motion.span
-          key={sparkle.id}
-          className="absolute rounded-full bg-motif-accent/55 shadow-[0_0_6px_color-mix(in_srgb,var(--color-motif-accent)_70%,transparent)]"
-          style={{
-            top: sparkle.top,
-            left: sparkle.left,
-            width: sparkle.size,
-            height: sparkle.size,
-          }}
-          animate={{
-            y: [0, -14, 0],
-            x: [0, 8, 0],
-            opacity: [0.3, 0.95, 0.3],
-            scale: [1, 1.3, 1],
-          }}
-          transition={{
-            duration: sparkle.duration,
-            repeat: Infinity,
-            delay: sparkle.delay,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
-    </div>
+interface SparkParticle {
+  id: number
+  x: number
+  y: number
+  size: number
+  color: string
+  opacity: number
+  duration: number
+  delay: number
+  driftX: number
+  driftY: number
+  twinkleDuration: number
+}
+
+function createAmbientOrbs(count: number): AmbientOrb[] {
+  return Array.from({ length: count }, (_, id) => ({
+    id,
+    x: 4 + Math.random() * 92,
+    y: 6 + Math.random() * 88,
+    size: 60 + Math.random() * 100,
+    color: PALETTE_COLORS[Math.floor(Math.random() * PALETTE_COLORS.length)],
+    opacity: 0.06 + Math.random() * 0.09,
+    duration: 16 + Math.random() * 14,
+    delay: Math.random() * 6,
+    driftX: -14 + Math.random() * 28,
+    driftY: -12 + Math.random() * 24,
+  }))
+}
+
+function createSparkParticles(count: number): SparkParticle[] {
+  return Array.from({ length: count }, (_, id) => ({
+    id,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: 1.5 + Math.random() * 3,
+    color: PALETTE_COLORS[Math.floor(Math.random() * PALETTE_COLORS.length)],
+    opacity: 0.18 + Math.random() * 0.22,
+    duration: 12 + Math.random() * 16,
+    delay: Math.random() * 10,
+    driftX: -10 + Math.random() * 20,
+    driftY: -12 + Math.random() * 24,
+    twinkleDuration: 3 + Math.random() * 4,
+  }))
+}
+
+function DottedRule({ compact = false }: { compact?: boolean }) {
+  return (
+    <div
+      className={
+        compact
+          ? "w-[3.25rem] border-t border-dotted md:w-[4rem]"
+          : "flex-1 border-t border-dotted"
+      }
+      style={{ borderColor: TEXT_DEEP }}
+    />
+  )
+}
+
+function ProposalHeroBackdrop({ decorVisible }: { decorVisible: boolean }) {
+  const ambientOrbs = useMemo(() => createAmbientOrbs(5), [])
+  const sparkParticles = useMemo(() => createSparkParticles(16), [])
+  const decorClass = decorVisible ? " decor-visible" : ""
+
+  return (
+    <>
+      <div className="proposal-base pointer-events-none absolute inset-0 z-0" aria-hidden />
+      <div className="proposal-wash pointer-events-none absolute inset-0 z-0" aria-hidden />
+
+      <div className="particle-field particle-field-visible pointer-events-none absolute inset-0 z-[1]" aria-hidden>
+        <div className="particle-gradient" />
+        {ambientOrbs.map((orb) => (
+          <span
+            key={`orb-${orb.id}`}
+            className="particle-orb"
+            style={{
+              left: `${orb.x}%`,
+              top: `${orb.y}%`,
+              width: orb.size,
+              height: orb.size,
+              backgroundColor: orb.color,
+              opacity: orb.opacity,
+              animationDuration: `${orb.duration}s`,
+              animationDelay: `${orb.delay}s`,
+              ["--drift-x" as string]: `${orb.driftX}px`,
+              ["--drift-y" as string]: `${orb.driftY}px`,
+            }}
+          />
+        ))}
+        {sparkParticles.map((particle) => (
+          <span
+            key={`spark-${particle.id}`}
+            className="particle-spark"
+            style={{
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+              width: particle.size,
+              height: particle.size,
+              backgroundColor: particle.color,
+              color: particle.color,
+              opacity: particle.opacity,
+              animationDuration: `${particle.duration}s, ${particle.twinkleDuration}s`,
+              animationDelay: `${particle.delay}s, ${particle.delay * 0.4}s`,
+              ["--drift-x" as string]: `${particle.driftX}px`,
+              ["--drift-y" as string]: `${particle.driftY}px`,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className={`decor-corner decor-top-left pointer-events-none absolute left-0 top-0 z-[2]${decorClass}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/decoration/decoration/left-top-decoration.png" alt="" className="block h-auto w-auto max-w-[130px] sm:max-w-[160px] md:max-w-[210px] lg:max-w-[260px]" />
+      </div>
+      <div className={`decor-corner decor-top-right pointer-events-none absolute right-0 top-0 z-[2]${decorClass}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/decoration/decoration/right-top-decoration.png" alt="" className="block h-auto w-auto max-w-[130px] sm:max-w-[160px] md:max-w-[210px] lg:max-w-[260px]" />
+      </div>
+      <div className={`decor-corner decor-bottom-left pointer-events-none absolute bottom-0 left-0 z-[2]${decorClass}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/decoration/decoration/left-bottom-decoration.png" alt="" className="block h-auto w-auto max-w-[130px] sm:max-w-[160px] md:max-w-[210px] lg:max-w-[260px]" />
+      </div>
+      <div className={`decor-corner decor-bottom-right pointer-events-none absolute bottom-0 right-0 z-[2]${decorClass}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/decoration/decoration/right-bottom-decoration.png" alt="" className="block h-auto w-auto max-w-[130px] sm:max-w-[160px] md:max-w-[210px] lg:max-w-[260px]" />
+      </div>
+      <div className={`decor-bottom pointer-events-none absolute bottom-0 left-0 right-0 z-[3] md:hidden${decorClass}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/decoration/decoration/bottom-center-decoration.png" alt="" className="block h-auto w-full" />
+      </div>
+    </>
   )
 }
 
 function CoupleNamesHero() {
   const siteConfig = useSiteConfig()
+  const groomNickname = siteConfig.couple.groomNickname || siteConfig.couple.groom
+  const brideNickname = siteConfig.couple.brideNickname || siteConfig.couple.bride
 
   return (
-    <div
-      className="relative z-10 flex w-full flex-col items-center leading-none"
-      style={{ ...playlistScriptStyle, color: "var(--color-motif-deep)" }}
-    >
-      <motion.span
-        aria-hidden
-        className="absolute -top-3 left-[18%] h-2 w-2 rounded-full bg-motif-accent/70 sm:-top-4 sm:left-[22%] sm:h-2.5 sm:w-2.5"
-        animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.4, 0.8], y: [0, -6, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.span
-        aria-hidden
-        className="absolute -top-2 right-[16%] h-1.5 w-1.5 rounded-full bg-motif-accent/60 sm:-top-3 sm:right-[20%] sm:h-2 sm:w-2"
-        animate={{ opacity: [0.15, 0.9, 0.15], scale: [0.9, 1.25, 0.9], y: [0, -5, 0] }}
-        transition={{ duration: 2.6, repeat: Infinity, delay: 0.8, ease: "easeInOut" }}
-      />
-      <span className="text-[clamp(3.5rem,20vw,6rem)] drop-shadow-sm sm:text-8xl md:text-9xl lg:text-[10rem] xl:text-[11rem]">
-        {siteConfig.couple.brideNickname}
-      </span>
-      <span
-        className="relative my-1 text-2xl opacity-70 sm:my-2 sm:text-3xl md:text-4xl"
-        style={{ color: "var(--color-motif-accent)" }}
+    <div className="relative z-10 flex w-full flex-col items-center leading-none">
+      <h1
+        className="w-full leading-none"
+        style={{
+          ...hps,
+          fontSize: "clamp(52px, 14vw, 72px)",
+          color: ACCENT,
+          fontWeight: 400,
+          letterSpacing: "0.04em",
+          textTransform: "capitalize",
+        }}
       >
-        <motion.span
-          aria-hidden
-          className="absolute -inset-6 rounded-full border border-motif-accent/20 sm:-inset-8"
-          animate={{ rotate: 360, scale: [1, 1.06, 1] }}
-          transition={{
-            rotate: { duration: 20, repeat: Infinity, ease: "linear" },
-            scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-          }}
-        />
-        +
-      </span>
-      <span className="text-[clamp(3.5rem,20vw,6rem)] drop-shadow-sm sm:text-8xl md:text-9xl lg:text-[10rem] xl:text-[11rem]">
-        {siteConfig.couple.groomNickname}
-      </span>
+        {groomNickname}
+      </h1>
+
+      <div className="my-2 flex w-full items-center justify-center gap-2 md:my-3">
+        <DottedRule compact />
+        <span className="shrink-0 text-[13px] md:text-[16px]" style={{ ...smg, color: TEXT }}>
+          and
+        </span>
+        <DottedRule compact />
+      </div>
+
+      <h1
+        className="w-full leading-none"
+        style={{
+          ...hps,
+          fontSize: "clamp(52px, 14vw, 72px)",
+          color: ACCENT,
+          fontWeight: 400,
+          letterSpacing: "0.04em",
+          textTransform: "capitalize",
+        }}
+      >
+        {brideNickname}
+      </h1>
     </div>
   )
 }
 
 function ProposalIntroSection({ venue }: { venue: string }) {
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-5 text-center sm:space-y-7">
-      <p
-        className={`${cormorant.className} px-1 text-[11px] leading-[1.85] font-medium tracking-[0.18em] uppercase sm:px-0 sm:text-sm sm:leading-relaxed sm:tracking-[0.32em]`}
-        style={{ color: "var(--color-motif-medium)" }}
-      >
-        With the grace of God and the blessings
-        <br className="sm:hidden" />
-        {" "}of our families we ask of you
-      </p>
+    <div
+      className="mx-auto w-full max-w-[310px] space-y-4 text-center md:max-w-[520px] md:space-y-5"
+      style={{ color: TEXT, WebkitFontSmoothing: "antialiased" }}
+    >
+      <div className="mb-1 w-full">
+        <svg viewBox="0 0 300 100" className="mx-auto h-[66px] w-full md:hidden" aria-hidden overflow="visible">
+          <defs>
+            <path id="proposalArcMob" d="M 6 80 A 178 178 0 0 1 294 80" fill="none" />
+          </defs>
+          <text fill={TEXT_DEEP} style={{ ...smg, fontSize: "24px", letterSpacing: "0.32em" }}>
+            <textPath href="#proposalArcMob" startOffset="50%" textAnchor="middle">
+              SAVE THE DATE
+            </textPath>
+          </text>
+        </svg>
+        <svg viewBox="0 0 480 130" className="mx-auto hidden h-[90px] w-full md:block" aria-hidden overflow="visible">
+          <defs>
+            <path id="proposalArcDsk" d="M 10 104 A 280 280 0 0 1 470 104" fill="none" />
+          </defs>
+          <text fill={TEXT_DEEP} style={{ ...smg, fontSize: "36px", letterSpacing: "0.3em" }}>
+            <textPath href="#proposalArcDsk" startOffset="50%" textAnchor="middle">
+              SAVE THE DATE
+            </textPath>
+          </text>
+        </svg>
+      </div>
 
-      <MotifDivider />
-
-      <p
-        className={`${cormorant.className} text-xs font-light tracking-[0.2em] uppercase italic sm:text-sm sm:tracking-[0.22em]`}
-        style={{ color: "var(--color-motif-medium)" }}
-      >
-        We,
-      </p>
+      <div className="flex w-full flex-col items-center gap-2">
+        <div className="flex w-full max-w-[280px] items-center justify-center gap-2 md:max-w-[320px]">
+          <DottedRule compact />
+          <p
+            className="shrink-0 text-[10px] tracking-[0.28em] uppercase md:text-[12px]"
+            style={{ ...smg, color: TEXT, opacity: 0.88 }}
+          >
+            With joy in our hearts
+          </p>
+          <DottedRule compact />
+        </div>
+        <p
+          className="text-[12px] leading-[1.65] md:text-[14px] md:leading-[1.75]"
+          style={{ ...smg, color: TEXT }}
+        >
+          With the grace of God and the blessings
+          <br />
+          of our families we ask of you
+        </p>
+      </div>
 
       <CoupleNamesHero />
 
       <p
-        className={`${cinzel.className} text-sm font-medium tracking-[0.18em] uppercase sm:text-base sm:tracking-[0.26em]`}
-        style={{ color: "var(--color-motif-deep)", opacity: 0.9 }}
+        className="text-sm tracking-[0.18em] uppercase md:text-base md:tracking-[0.22em]"
+        style={{ ...smg, color: TEXT_DEEP, fontWeight: 600 }}
       >
         Are Getting Married
       </p>
 
-      <div
-        className={`${cinzel.className} mx-auto flex max-w-md items-center justify-center gap-2 px-2 text-xs tracking-[0.14em] uppercase sm:text-sm sm:tracking-[0.16em]`}
-        style={{ color: "var(--color-motif-medium)" }}
-      >
-        <MapPin className="h-4 w-4 shrink-0" style={{ color: "var(--color-motif-accent)" }} />
-        <span className="text-pretty text-center" title={venue}>
-          {venue}
-        </span>
+      <div className="flex flex-col items-center">
+        <div className="flex items-center justify-center gap-1.5 md:gap-2">
+          <DottedRule compact />
+          <span className="text-[13px] md:text-[15px]" style={{ ...smg, color: TEXT }}>
+            at
+          </span>
+          <DottedRule compact />
+        </div>
+        <p
+          className="mt-2 flex items-center justify-center gap-2 text-[13px] leading-snug md:mt-2.5 md:text-[15px]"
+          style={{ ...smg, color: TEXT }}
+        >
+          <MapPin className="h-4 w-4 shrink-0" style={{ color: ACCENT }} />
+          <span className="text-pretty" title={venue}>
+            {venue}
+          </span>
+        </p>
       </div>
     </div>
   )
 }
 
 const cardClass =
-  "relative w-full overflow-hidden rounded-2xl sm:rounded-3xl md:rounded-[2rem] border border-motif-accent/20 bg-gradient-to-b from-motif-cream/95 via-motif-cream to-white/85 p-5 text-center shadow-[0_24px_80px_rgba(15,28,63,0.08)] backdrop-blur-sm sm:p-12 md:p-14 lg:p-16"
+  "relative w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-motif-medium/20 bg-motif-cream/90 p-5 text-center shadow-[0_16px_48px_rgba(42,37,32,0.08)] backdrop-blur-sm sm:p-10 md:p-12 lg:p-14"
 
 const primaryBtnClass =
-  "cursor-pointer rounded-full border border-motif-deep bg-motif-deep px-5 py-3 text-[9px] font-bold tracking-[0.16em] text-motif-cream uppercase shadow-[0_8px_24px_rgba(15,28,63,0.18)] transition-all duration-300 hover:bg-motif-medium hover:border-motif-medium hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 sm:px-7 sm:py-3.5 sm:text-[10px] sm:tracking-[0.18em] md:px-8 md:py-4 md:text-[11px]"
+  "cursor-pointer rounded-lg border border-motif-accent bg-motif-accent px-5 py-3 text-[10px] font-semibold tracking-[0.22em] text-white uppercase shadow-[0_10px_24px_color-mix(in_srgb,var(--color-motif-accent)_28%,transparent)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-motif-deep hover:border-motif-deep disabled:opacity-50 sm:px-7 sm:py-3.5 sm:text-[11px] sm:tracking-[0.26em] md:px-8 md:py-4"
 
 const secondaryBtnClass =
-  "cursor-pointer rounded-full border border-motif-accent/45 bg-white/70 px-5 py-3 text-[9px] font-bold tracking-[0.16em] uppercase shadow-sm transition-all duration-300 hover:border-motif-accent/70 hover:bg-motif-accent/10 sm:px-7 sm:py-3.5 sm:text-[10px] sm:tracking-[0.18em] md:px-8 md:py-4 md:text-[11px]"
+  "cursor-pointer rounded-lg border border-motif-medium/35 bg-white/70 px-5 py-3 text-[10px] font-semibold tracking-[0.22em] uppercase shadow-sm transition-all duration-300 hover:border-motif-accent/50 hover:bg-motif-soft/20 sm:px-7 sm:py-3.5 sm:text-[11px] sm:tracking-[0.26em] md:px-8 md:py-4"
 
 function ProposalAskSection({
   roleSingular,
@@ -221,10 +362,10 @@ function ProposalAskSection({
   return (
     <div className="relative mx-auto mt-0 w-full sm:mt-10">
       {coAttendants.length > 0 && (
-        <div className="mx-auto mb-8 max-w-lg space-y-3 rounded-2xl border border-motif-accent/20 bg-white/60 px-5 py-4 text-center sm:px-6 sm:py-5">
+        <div className="mx-auto mb-8 max-w-lg space-y-3 rounded-xl border border-motif-medium/20 bg-white/60 px-5 py-4 text-center sm:px-6 sm:py-5">
           <div
             className="flex items-center justify-center gap-2 text-[10px] font-semibold tracking-[0.2em] uppercase sm:text-xs"
-            style={{ color: "var(--color-motif-accent)" }}
+            style={{ ...smg, color: ACCENT }}
           >
             <Sparkles className="h-3.5 w-3.5 shrink-0" />
             <span>Co-members standing in this position</span>
@@ -233,8 +374,8 @@ function ProposalAskSection({
             {coAttendants.map((name, idx) => (
               <span
                 key={idx}
-                className="rounded-full border border-motif-accent/30 bg-motif-soft/30 px-3 py-1 text-xs font-medium shadow-sm"
-                style={{ color: "var(--color-motif-deep)" }}
+                className="rounded-full border border-motif-medium/25 bg-motif-soft/30 px-3 py-1 text-xs font-medium shadow-sm"
+                style={{ ...smg, color: TEXT_DEEP }}
               >
                 ✨ {name}
               </span>
@@ -243,7 +384,7 @@ function ProposalAskSection({
         </div>
       )}
 
-      <div className="relative pt-0 sm:border-t sm:border-motif-accent/15 sm:pt-10">
+      <div className="relative pt-0 sm:border-t sm:border-motif-medium/15 sm:pt-10">
         <span
           aria-hidden
           className="pointer-events-none absolute right-0 bottom-8 h-56 w-56 rounded-full opacity-35 blur-3xl sm:bottom-12 sm:h-72 sm:w-72"
@@ -259,8 +400,8 @@ function ProposalAskSection({
             <div className="relative z-10 flex min-w-0 flex-1 flex-col items-start text-left">
               <div ref={questionRef} className="w-full">
                 <p
-                  className={`${cormorant.className} text-xs tracking-[0.34em] uppercase sm:text-sm sm:tracking-[0.4em] font-bold`}
-                  style={{ color: "var(--color-motif-medium)" }}
+                  className="text-[10px] tracking-[0.28em] uppercase sm:text-xs sm:tracking-[0.32em]"
+                  style={{ ...smg, color: TEXT, fontWeight: 600 }}
                 >
                   Will You Be Our
                 </p>
@@ -268,26 +409,20 @@ function ProposalAskSection({
                 <h2
                   className="mt-2 leading-[0.92] sm:mt-3"
                   style={{
-                    ...playlistScriptStyle,
-                    fontFamily: "var(--font-playlist-script), cursive",
-                    fontSize: "clamp(2.75rem, 11vw, 5.25rem)",
-                    color: "var(--color-motif-deep)",
-                    opacity: 0.9,
-                    letterSpacing: "0.01em",
+                    ...hps,
+                    fontSize: "clamp(2.75rem, 11vw, 4.5rem)",
+                    color: ACCENT,
                     fontWeight: 400,
-                    fontStyle: "normal",
-                    fontVariant: "normal",
-                    fontStretch: "normal",
-                    fontVariantLigatures: "normal",
-                    fontVariantNumeric: "normal",
+                    letterSpacing: "0.04em",
+                    textTransform: "capitalize",
                   }}
                 >
                   {roleSingular}?
                 </h2>
 
                 <p
-                  className={`${cormorant.className} mt-3 max-w-lg pr-1 text-sm leading-[1.65] font-light italic sm:mt-6 sm:pr-0 sm:text-base sm:leading-[1.75] md:mt-7 md:text-lg md:leading-relaxed`}
-                  style={{ color: "var(--color-motif-medium)" }}
+                  className="mt-3 max-w-lg pr-1 text-sm leading-[1.65] italic sm:mt-6 sm:pr-0 sm:text-base sm:leading-[1.75] md:mt-7 md:text-lg md:leading-relaxed"
+                  style={{ ...smg, color: TEXT }}
                 >
                   &ldquo;{description}&rdquo;
                 </p>
@@ -301,7 +436,7 @@ function ProposalAskSection({
                 <button
                   onClick={onNo}
                   className={`${secondaryBtnClass} min-w-0 flex-1`}
-                  style={{ color: "var(--color-motif-medium)" }}
+                  style={{ ...smg, color: TEXT }}
                 >
                   Regretfully Decline
                 </button>
@@ -316,14 +451,14 @@ function ProposalAskSection({
               aria-hidden
               style={
                 questionHeight
-                  ? ({ "--ask-image-h": `${questionHeight}px` } as React.CSSProperties)
+                  ? ({ "--ask-image-h": `${questionHeight}px` } as CSSProperties)
                   : undefined
               }
               className="pointer-events-none relative -mr-1 flex w-[38%] max-w-[168px] shrink-0 items-center justify-end self-stretch translate-x-4 max-sm:h-[var(--ask-image-h)] sm:mr-0 sm:block sm:w-[min(36vw,240px)] sm:max-w-none sm:translate-x-0 md:w-[min(32vw,280px)] lg:w-[300px]"
             >
               <div className="relative h-full w-full sm:h-auto sm:aspect-[3/4] sm:translate-y-4 md:translate-y-6">
                 <Image
-                  src="/Details/guest.png"
+                  src="/attireGuide/character.png"
                   alt=""
                   fill
                   className="object-contain object-[right_center] drop-shadow-[0_20px_48px_rgba(15,28,63,0.14)] sm:object-bottom"
@@ -345,27 +480,13 @@ function ProposalAskSection({
             <button
               onClick={onNo}
               className={`${secondaryBtnClass} min-h-11 min-w-0 flex-1 px-4 py-3.5 text-[10px] tracking-[0.12em]`}
-              style={{ color: "var(--color-motif-medium)" }}
+              style={{ color: TEXT }}
             >
               Decline
             </button>
           </div>
         </div>
       </div>
-    </div>
-  )
-}
-
-function MotifDivider() {
-  return (
-    <div className="flex items-center justify-center gap-2">
-      <span className="h-px w-10 rounded-full bg-motif-accent/60 sm:w-14" />
-      <div className="flex gap-1.5">
-        <span className="h-1.5 w-1.5 rounded-full bg-motif-accent opacity-80" />
-        <span className="h-1.5 w-1.5 rounded-full bg-motif-accent opacity-50" />
-        <span className="h-1.5 w-1.5 rounded-full bg-motif-accent opacity-80" />
-      </div>
-      <span className="h-px w-10 rounded-full bg-motif-accent/60 sm:w-14" />
     </div>
   )
 }
@@ -462,24 +583,12 @@ export function ProposalPage({ role }: ProposalPageProps) {
 
   return (
     <div
-      className={`${cormorant.className} relative flex min-h-screen select-none flex-col items-center justify-center overflow-hidden bg-transparent px-3 py-8 sm:px-6 sm:py-16`}
+      className="relative isolate flex min-h-screen select-none flex-col items-center justify-center overflow-hidden px-3 py-8 sm:px-6 sm:py-16"
+      style={{ background: "var(--color-motif-cream)", ...smg, color: TEXT }}
     >
       {!isReady && <LoadingScreen onComplete={handleLoadingComplete} />}
 
-      {/* Silk background — full visibility, no page overlays */}
-      {enableDecor && (
-        <div className="pointer-events-none fixed inset-0 z-0">
-          <Suspense fallback={<div className="h-full w-full bg-transparent" />}>
-            <Silk
-              speed={5}
-              scale={1.1}
-              color="#0F1C3F"
-              noiseIntensity={0.8}
-              rotation={0.3}
-            />
-          </Suspense>
-        </div>
-      )}
+      <ProposalHeroBackdrop decorVisible={isReady} />
 
       <motion.div
         initial={{ opacity: 0, y: 24 }}
@@ -497,13 +606,12 @@ export function ProposalPage({ role }: ProposalPageProps) {
               transition={{ duration: 0.6, ease: "easeOut" }}
               className={cardClass}
             >
-              <RomanticSparkles />
               <div className="relative z-10 w-full space-y-3 pt-1 sm:space-y-8 sm:pt-2">
                 <ProposalIntroSection venue={venue} />
 
                 <div
-                  className="mx-auto max-w-xl space-y-3 border-t border-motif-accent/15 px-1 pt-4 pb-0 text-[13px] leading-[1.75] font-light italic sm:space-y-5 sm:px-0 sm:border-y sm:py-8 sm:text-base sm:leading-[1.8]"
-                  style={{ color: "var(--color-motif-deep)", opacity: 0.88 }}
+                  className="mx-auto max-w-xl space-y-3 border-t border-motif-medium/15 px-1 pt-4 pb-0 text-[13px] leading-[1.75] italic sm:space-y-5 sm:px-0 sm:border-y sm:py-8 sm:text-base sm:leading-[1.8]"
+                  style={{ ...smg, color: TEXT_DEEP, opacity: 0.92 }}
                 >
                   <p className="text-pretty">
                     &ldquo;As we enter the next chapter of our lives as husband and wife, we seek
@@ -511,8 +619,8 @@ export function ProposalPage({ role }: ProposalPageProps) {
                     love, wisdom, and example.&rdquo;
                   </p>
                   <p
-                    className="text-[11px] leading-relaxed font-medium tracking-[0.14em] uppercase not-italic sm:text-sm sm:tracking-[0.2em]"
-                    style={{ color: "var(--color-motif-medium)" }}
+                    className="text-[11px] leading-relaxed tracking-[0.14em] uppercase not-italic sm:text-sm sm:tracking-[0.2em]"
+                    style={{ ...smg, color: TEXT, fontWeight: 600 }}
                   >
                     Because you are a role model of love, laughter, and happily ever after, it
                     would be our honor if you would stand with us and witness our love as our:
@@ -548,15 +656,15 @@ export function ProposalPage({ role }: ProposalPageProps) {
                 </div>
 
                 <h2
-                  className="mb-2 text-xl font-medium italic sm:text-3xl"
-                  style={{ color: "var(--color-motif-deep)" }}
+                  className="mb-2 text-xl italic sm:text-3xl"
+                  style={{ ...hps, color: ACCENT, fontSize: "clamp(1.75rem, 6vw, 2.75rem)" }}
                 >
                   We are honored to have you as part of our special day.
                 </h2>
 
                 <p
-                  className="mx-auto max-w-md text-xs leading-relaxed font-light sm:text-sm"
-                  style={{ color: "var(--color-motif-medium)" }}
+                  className="mx-auto max-w-md text-xs leading-relaxed sm:text-sm"
+                  style={{ ...smg, color: TEXT }}
                 >
                   Thank you for accepting our proposal! Please enter the exact name you would like
                   displayed on our wedding invitation and guestlists:
@@ -565,9 +673,9 @@ export function ProposalPage({ role }: ProposalPageProps) {
                 <div className="mx-auto max-w-md text-left">
                   <label
                     className="mb-2 block text-[10px] font-semibold tracking-widest uppercase sm:text-xs"
-                    style={{ color: "var(--color-motif-medium)" }}
+                    style={{ ...smg, color: TEXT }}
                   >
-                    Your Preferred Name <span style={{ color: "var(--color-motif-accent)" }}>*</span>
+                    Your Preferred Name <span style={{ color: ACCENT }}>*</span>
                   </label>
                   <input
                     type="text"
@@ -575,8 +683,8 @@ export function ProposalPage({ role }: ProposalPageProps) {
                     placeholder="e.g. Aunt Maria Clara / Mr. James Bond"
                     value={preferredName}
                     onChange={(e) => setPreferredName(e.target.value)}
-                    className="w-full rounded-xl border border-motif-accent/30 bg-white/70 px-4 py-2.5 text-xs font-medium transition-all placeholder:text-motif-medium/40 focus:border-motif-accent focus:ring-2 focus:ring-motif-accent/30 focus:outline-none sm:py-3 sm:text-sm"
-                    style={{ color: "var(--color-motif-deep)" }}
+                    className="w-full rounded-xl border border-motif-medium/30 bg-white/70 px-4 py-2.5 text-xs font-medium transition-all placeholder:text-motif-medium/40 focus:border-motif-accent focus:ring-2 focus:ring-motif-accent/30 focus:outline-none sm:py-3 sm:text-sm"
+                    style={{ ...smg, color: TEXT_DEEP }}
                   />
                   {validationError && (
                     <p className="mt-2 flex items-center gap-1 text-xs font-medium text-rose-500">
@@ -596,7 +704,7 @@ export function ProposalPage({ role }: ProposalPageProps) {
                     type="button"
                     onClick={() => setFlowState("question")}
                     className={secondaryBtnClass}
-                    style={{ color: "var(--color-motif-medium)" }}
+                    style={{ ...smg, color: TEXT }}
                   >
                     Cancel
                   </button>
@@ -628,35 +736,35 @@ export function ProposalPage({ role }: ProposalPageProps) {
 
                 <h2
                   className="mb-4 leading-none"
-                  style={{ ...brittanyStyle, fontSize: "clamp(2rem, 9vw, 3.5rem)" }}
+                  style={{ ...hps, fontSize: "clamp(2rem, 9vw, 3.5rem)", color: ACCENT }}
                 >
                   It&apos;s Official!
                 </h2>
 
-                <div className="mx-auto mb-6 max-w-sm rounded-2xl border border-motif-accent/25 bg-white/65 px-6 py-4 shadow-[0_8px_28px_rgba(15,28,63,0.08)] backdrop-blur-sm">
+                <div className="mx-auto mb-6 max-w-sm rounded-2xl border border-motif-medium/20 bg-white/65 px-6 py-4 shadow-[0_8px_28px_rgba(42,37,32,0.08)] backdrop-blur-sm">
                   <span
                     className="mb-1 block text-[10px] font-semibold tracking-widest uppercase"
-                    style={{ color: "var(--color-motif-medium)" }}
+                    style={{ ...smg, color: TEXT }}
                   >
                     Registered partner
                   </span>
                   <p
                     className="text-lg font-semibold tracking-wide sm:text-xl"
-                    style={{ color: "var(--color-motif-deep)" }}
+                    style={{ ...hps, color: ACCENT, fontSize: "clamp(1.5rem, 5vw, 2rem)" }}
                   >
                     {preferredName}
                   </p>
                   <span
-                    className="mt-1.5 block text-xs font-medium italic"
-                    style={{ color: "var(--color-motif-accent)" }}
+                    className="mt-1.5 block text-xs italic"
+                    style={{ ...smg, color: TEXT }}
                   >
                     for the position of {role.title}
                   </span>
                 </div>
 
                 <p
-                  className="mx-auto mb-10 max-w-md text-sm leading-relaxed font-light"
-                  style={{ color: "var(--color-motif-medium)" }}
+                  className="mx-auto mb-10 max-w-md text-sm leading-relaxed"
+                  style={{ ...smg, color: TEXT }}
                 >
                   Thank you so much. Having you stand with us fills our hearts with endless joy
                   and confidence. We can&apos;t wait to celebrate together on our wedding day!
@@ -685,15 +793,15 @@ export function ProposalPage({ role }: ProposalPageProps) {
                 </div>
 
                 <h2
-                  className="mb-4 text-2xl font-semibold tracking-wide uppercase"
-                  style={{ color: "var(--color-motif-deep)" }}
+                  className="mb-4 text-2xl tracking-[0.12em] uppercase sm:text-3xl"
+                  style={{ ...smg, color: TEXT_DEEP, fontWeight: 600 }}
                 >
                   Thank You for Responding
                 </h2>
 
                 <p
-                  className="mx-auto mb-10 max-w-lg text-sm leading-relaxed font-light italic sm:text-base"
-                  style={{ color: "var(--color-motif-medium)" }}
+                  className="mx-auto mb-10 max-w-lg text-sm leading-relaxed italic sm:text-base"
+                  style={{ ...smg, color: TEXT }}
                 >
                   &ldquo;Thank you for taking the time to respond. While we&apos;re saddened that
                   you won&apos;t be able to join us in this role, we truly appreciate your support
@@ -714,7 +822,7 @@ export function ProposalPage({ role }: ProposalPageProps) {
                   <button
                     onClick={() => setFlowState("question")}
                     className={secondaryBtnClass}
-                    style={{ color: "var(--color-motif-medium)" }}
+                    style={{ ...smg, color: TEXT }}
                   >
                     Go Back
                   </button>
@@ -738,15 +846,15 @@ export function ProposalPage({ role }: ProposalPageProps) {
                 </div>
 
                 <h2
-                  className="mb-4 leading-none italic"
-                  style={{ ...brittanyStyle, fontSize: "clamp(1.75rem, 7vw, 2.75rem)" }}
+                  className="mb-4 leading-none"
+                  style={{ ...hps, fontSize: "clamp(1.75rem, 7vw, 2.75rem)", color: ACCENT }}
                 >
                   Response Sent Successfully
                 </h2>
 
                 <p
-                  className="mx-auto mb-8 max-w-md text-sm leading-relaxed font-light"
-                  style={{ color: "var(--color-motif-medium)" }}
+                  className="mx-auto mb-8 max-w-md text-sm leading-relaxed"
+                  style={{ ...smg, color: TEXT }}
                 >
                   We have received your response. Your love, support, and well wishes mean the
                   world to us regardless. We look forward to celebrating other special milestones
@@ -756,7 +864,7 @@ export function ProposalPage({ role }: ProposalPageProps) {
                 <Link
                   href="/"
                   className={secondaryBtnClass}
-                  style={{ color: "var(--color-motif-medium)" }}
+                  style={{ ...smg, color: TEXT }}
                 >
                   Return to Wedding Page
                 </Link>
@@ -765,6 +873,141 @@ export function ProposalPage({ role }: ProposalPageProps) {
           )}
         </AnimatePresence>
       </motion.div>
+
+      <style jsx>{`
+        .proposal-base {
+          background: ${HERO_BACKGROUND};
+        }
+
+        .proposal-wash {
+          background:
+            radial-gradient(
+              ellipse 120% 80% at 50% 0%,
+              #FFFFFF 0%,
+              color-mix(in srgb, var(--color-motif-cream) 92%, white) 55%,
+              var(--color-motif-cream) 100%
+            ),
+            linear-gradient(
+              180deg,
+              var(--color-motif-cream) 0%,
+              color-mix(in srgb, var(--color-motif-silver) 35%, var(--color-motif-cream)) 100%
+            );
+        }
+
+        .decor-corner,
+        .decor-bottom {
+          opacity: 0;
+          will-change: transform, opacity;
+        }
+
+        .decor-top-left {
+          transform: translate(-12%, -12%);
+          transition:
+            opacity 1.35s cubic-bezier(0.16, 1, 0.3, 1) 0.06s,
+            transform 1.65s cubic-bezier(0.16, 1, 0.3, 1) 0.06s;
+        }
+
+        .decor-top-right {
+          transform: translate(12%, -12%);
+          transition:
+            opacity 1.35s cubic-bezier(0.16, 1, 0.3, 1) 0.14s,
+            transform 1.65s cubic-bezier(0.16, 1, 0.3, 1) 0.14s;
+        }
+
+        .decor-bottom-left {
+          transform: translate(-12%, 12%);
+          transition:
+            opacity 1.35s cubic-bezier(0.16, 1, 0.3, 1) 0.22s,
+            transform 1.65s cubic-bezier(0.16, 1, 0.3, 1) 0.22s;
+        }
+
+        .decor-bottom-right {
+          transform: translate(12%, 12%);
+          transition:
+            opacity 1.35s cubic-bezier(0.16, 1, 0.3, 1) 0.30s,
+            transform 1.65s cubic-bezier(0.16, 1, 0.3, 1) 0.30s;
+        }
+
+        .decor-bottom {
+          transform: translateY(28%);
+          transition:
+            opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.38s,
+            transform 1.55s cubic-bezier(0.16, 1, 0.3, 1) 0.38s;
+        }
+
+        .decor-corner.decor-visible,
+        .decor-bottom.decor-visible {
+          opacity: 1;
+          transform: translate(0, 0);
+        }
+
+        .particle-field-visible {
+          opacity: 1;
+        }
+
+        .particle-gradient {
+          position: absolute;
+          inset: -20%;
+          background:
+            radial-gradient(circle at 14% 18%, color-mix(in srgb, var(--color-motif-yellow) 14%, transparent) 0%, transparent 40%),
+            radial-gradient(circle at 86% 14%, color-mix(in srgb, var(--color-motif-soft) 18%, transparent) 0%, transparent 38%),
+            radial-gradient(circle at 78% 82%, color-mix(in srgb, var(--color-motif-accent) 14%, transparent) 0%, transparent 42%),
+            radial-gradient(circle at 20% 78%, color-mix(in srgb, var(--color-motif-silver) 20%, transparent) 0%, transparent 38%),
+            radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--color-motif-cream) 22%, transparent) 0%, transparent 52%);
+          animation: gradientBreath 22s ease-in-out infinite alternate;
+        }
+
+        .particle-orb,
+        .particle-spark {
+          position: absolute;
+          border-radius: 9999px;
+          will-change: transform, opacity;
+          animation-name: particleDrift;
+          animation-timing-function: ease-in-out;
+          animation-iteration-count: infinite;
+          animation-direction: alternate;
+        }
+
+        .particle-orb {
+          filter: blur(38px);
+          transform: translate3d(-50%, -50%, 0);
+        }
+
+        .particle-spark {
+          transform: translate3d(-50%, -50%, 0);
+          box-shadow: 0 0 6px color-mix(in srgb, currentColor 35%, transparent);
+          animation-name: particleDrift, particleTwinkleOpacity;
+        }
+
+        @keyframes particleTwinkleOpacity {
+          0%, 100% { opacity: 0.12; }
+          50% { opacity: 0.45; }
+        }
+
+        @keyframes gradientBreath {
+          0% { transform: scale(1) translate3d(0, 0, 0); }
+          100% { transform: scale(1.05) translate3d(0, -1%, 0); }
+        }
+
+        @keyframes particleDrift {
+          0% { transform: translate3d(calc(-50% + 0px), calc(-50% + 0px), 0); }
+          100% {
+            transform: translate3d(
+              calc(-50% + var(--drift-x, 12px)),
+              calc(-50% + var(--drift-y, -18px)),
+              0
+            );
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .particle-gradient,
+          .particle-orb,
+          .particle-spark {
+            animation: none !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }
