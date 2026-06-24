@@ -191,7 +191,7 @@ export function Welcome() {
                     and memories.
                   </p>
                   <p
-                    className={`${cinzel.className} text-base tracking-[0.06em] sm:text-lg sm:tracking-[0.08em] md:text-xl`}
+                    className={`${cormorant.className} text-base tracking-[0.06em] sm:text-lg sm:tracking-[0.08em] md:text-xl`}
                     style={{ color: welcomePalette.deep }}
                   >
                     {siteConfig.snapShare.hashtag.join(" ")}

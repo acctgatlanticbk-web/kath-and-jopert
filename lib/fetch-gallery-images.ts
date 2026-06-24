@@ -2,6 +2,7 @@ import fs from "fs"
 import path from "path"
 
 const GALLERY_FOLDERS = ["desktop-background", "mobile-background"] as const
+const IMAGE_FILE = /\.(webp|jpe?g|png|gif|avif)$/i
 
 function sortByNumericSuffix(paths: string[]): string[] {
   return [...paths].sort((a, b) => {
@@ -18,18 +19,26 @@ function readGalleryImagesFromPublic(): string[] {
     const dir = path.join(process.cwd(), "public", folder)
     if (!fs.existsSync(dir)) continue
 
-    const files = fs
-      .readdirSync(dir)
-      .filter((file) => /\.webp$/i.test(file))
-      .map((file) => `/${folder}/${file}`)
+    try {
+      const files = fs
+        .readdirSync(dir)
+        .filter((file) => IMAGE_FILE.test(file))
+        .map((file) => `/${folder}/${file}`)
 
-    images.push(...sortByNumericSuffix(files))
+      images.push(...sortByNumericSuffix(files))
+    } catch {
+      // Missing permissions or unreadable folder — treat as empty.
+    }
   }
 
   return images
 }
 
-/** Loads gallery images from public/desktop-background and public/mobile-background. */
+/** Loads gallery images from public/desktop-background and public/mobile-background only. */
 export async function fetchGalleryImages(): Promise<string[]> {
-  return readGalleryImagesFromPublic()
+  try {
+    return readGalleryImagesFromPublic()
+  } catch {
+    return []
+  }
 }

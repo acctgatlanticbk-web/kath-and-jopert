@@ -106,7 +106,7 @@ function getFaqItems(siteConfig: SiteConfig): FAQItem[] {
             className={linkClass}
             style={{ color: palette.accent }}
           >
-            {siteConfig.details.rsvp.coordinator}
+            {siteConfig.couple.bride}
           </a>{" "}
           or{" "}
           <a

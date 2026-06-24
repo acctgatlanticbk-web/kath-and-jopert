@@ -133,23 +133,7 @@ export default async function GalleryPage() {
           </div>
         </div>
 
-        {images.length === 0 ? (
-          <div className={`${cormorant.className} text-center text-motif-medium`}>
-            <p className="font-light">
-              No images found. Add photos to{" "}
-              <code className="px-2 py-1 rounded border bg-motif-accent/10 border-motif-accent/40 text-motif-deep">
-                public/desktop-background
-              </code>
-              {" "}or{" "}
-              <code className="px-2 py-1 rounded border bg-motif-accent/10 border-motif-accent/40 text-motif-deep">
-                public/mobile-background
-              </code>
-              .
-            </p>
-          </div>
-        ) : (
-          <MasonryGallery images={images} />
-        )}
+        {images.length > 0 && <MasonryGallery images={images} />}
       </section>
     </main>
   )

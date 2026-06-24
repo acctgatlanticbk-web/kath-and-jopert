@@ -37,10 +37,16 @@ const ct = {
 } as const
 
 const galleryItems = [
-  { image: "/mobile-background/image.png", text: " " },
-  { image: "/mobile-background/image.png", text: " " },
-  { image: "/mobile-background/image.png", text: " " },
-  { image: "/mobile-background/image.png", text: " " },
+  { image: "/mobile-background/couple (1).jpeg", text: " " },
+  { image: "/mobile-background/couple (2).jpeg", text: " " },
+  { image: "/mobile-background/couple (3).jpeg", text: " " },
+  { image: "/mobile-background/couple (4).jpeg", text: " " },
+  { image: "/mobile-background/couple (5).jpeg", text: " " },
+  { image: "/mobile-background/couple (6).jpeg", text: " " },
+  { image: "/mobile-background/couple (7).jpeg", text: " " },
+  { image: "/mobile-background/couple (8).jpeg", text: " " },
+  { image: "/mobile-background/couple (9).jpeg", text: " " },
+  { image: "/mobile-background/couple (10).jpeg", text: " " },
 
 
 ]

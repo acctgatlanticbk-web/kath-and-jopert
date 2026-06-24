@@ -134,7 +134,7 @@ Now, as they prepare to say yes before God and the people they love most, Cather
   playlist: {
     title: "A Playlist from our hearts",
     subtitle: "Songs that have been part of our journey together",
-    playlistName: "Mia & Jov Wedding",
+    playlistName: "Mark & Denise Wedding",
     embedUrl:
     //"https://open.spotify.com/embed/playlist/5Byw7lVriAOsOFOQ7A3hE6?utm_source=generator&si=2252feb4ea514014
       "https://open.spotify.com/embed/playlist/5Byw7lVriAOsOFOQ7A3hE6?utm_source=generator&si=2252feb4ea514014",
@@ -144,7 +144,7 @@ Now, as they prepare to say yes before God and the people they love most, Cather
     googleDriveLink:
       "https://drive.google.com/drive/folders/1fH_NKSGFyW1DupwtElpS-cZIldXJ3280?usp=sharing",
     albumQR: "/QR/AlbumQR.png",
-    hashtag: ["#MiaAndJovWedding"],
+    hashtag: ["#BIONGgaCADAy"],
     instructions: "Please scan this QR Code and upload the photos and videos you have taken during our wedding reception. We are delighted to see your snaps too!",
   },
   accommodation: {
